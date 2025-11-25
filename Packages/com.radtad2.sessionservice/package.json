@@ -9,12 +9,7 @@
     {
       "displayName": "Purrnet Clienthost Providers",
       "description": "Steamworks.NET and Local client host providers for Purrnet.",
-      "path": "Samples~/Purrnet",
-      "dependencies" :
-      {
-        "com.rlabrecque.steamworks.net": "https://github.com/rlabrecque/Steamworks.NET.git?path=/com.rlabrecque.steamworks.net#2024.8.0",
-        "dev.purrnet.purrnet" : "https://github.com/PurrNet/PurrNet.git?path=/Assets/PurrNet#releases"
-      }
+      "path": "Samples~/Purrnet"
     }
   ]
 }
