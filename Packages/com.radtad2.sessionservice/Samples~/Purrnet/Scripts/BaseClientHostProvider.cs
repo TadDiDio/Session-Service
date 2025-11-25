@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using PurrNet;
@@ -23,23 +24,16 @@ namespace SessionService.Sample
 
         public void Initialize()
         {
-            if (_network.transport is not CompositeTransport composite)
-            {
-                throw new InvalidOperationException("The network manager's transport must be composite to use the session provider system.");
-            }
+            if (!_network.isOffline)
+                throw new InvalidOperationException("Cannot initialize a new provider while the network is online"); 
 
-            AddTransportIfNeeded(_network, _transport);
-            
-            if (!_network.TryGetComponent(_transport.GetType(), out _))
-                throw new MissingComponentException("Could not find a valid transport component on the network manager.");
-            
-            composite.SetClientTransport(_transport);
+            SetTransport(_network);
         }
 
         /// <summary>
         /// Initializes the transport and network manager.
         /// </summary>
-        protected abstract void AddTransportIfNeeded(NetworkManager network, GenericTransport transport);
+        protected abstract void SetTransport(NetworkManager network);
         
         /// <summary>
         /// Gets the details required to connect to the local client's session.

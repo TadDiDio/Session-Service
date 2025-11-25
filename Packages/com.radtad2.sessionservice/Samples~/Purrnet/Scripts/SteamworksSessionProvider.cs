@@ -3,20 +3,21 @@ using PurrNet;
 using PurrNet.Steam;
 using PurrNet.Transports;
 using Steamworks;
-using Unity.VisualScripting;
 
 namespace SessionService.Sample
 {
     public class SteamworksSessionProvider : BaseClientHostProvider
     {
-        public SteamworksSessionProvider(NetworkManager network, SteamTransport transport) : base(network, transport) { }
+        private SteamTransport _transport;
 
-        protected override void AddTransportIfNeeded(NetworkManager network, GenericTransport transport)
+        public SteamworksSessionProvider(NetworkManager network, SteamTransport transport) : base(network, transport)
         {
-            if (!network.TryGetComponent(typeof(SteamTransport), out _))
-            {
-                network.AddComponent<SteamTransport>();
-            }
+            _transport = transport;
+        }
+
+        protected override void SetTransport(NetworkManager network)
+        {
+            network.transport = _transport;
         }
         
         protected override SessionDetails GetDetails()

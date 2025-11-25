@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace SessionService
@@ -38,7 +39,7 @@ namespace SessionService
         
         public void SetProvider(ISessionProvider provider)
         {
-            if (State != SessionState.Disconnected) throw new InvalidOperationException("Cannot set a provider while not disconnected.");
+            if (State != SessionState.Disconnected) throw new InvalidOperationException("Cannot set a provider while online.");
             _provider = provider ?? throw new ArgumentNullException(nameof(provider));
             _provider.Initialize();
         }
@@ -55,40 +56,59 @@ namespace SessionService
         {
             if (!EnsureProvider() || State is not SessionState.Disconnected) return SessionCreateResult.Fail();
 
-            SetState(SessionState.Connecting);
-            
-            var result = await _provider.CreateSessionAsync(createRequest, token);
-
-            SetState(result.Connected ? SessionState.Connected : SessionState.Disconnected);
-
-            return result;
+            try
+            {
+                SetState(SessionState.Connecting);
+                var result = await _provider.CreateSessionAsync(createRequest, token);
+                SetState(result.Connected ? SessionState.Connected : SessionState.Disconnected);
+                return result;
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                SetState(SessionState.Disconnected);
+                return SessionCreateResult.Fail();
+            }
         }
 
         public async Task<SessionJoinResult> JoinSessionAsync(SessionJoinRequest request, CancellationToken token)
         {
             if (!EnsureProvider() || State is not SessionState.Disconnected) return SessionJoinResult.Fail();
 
-            SetState(SessionState.Connecting);
-            
-            var result = await _provider.JoinSessionAsync(request, token);
-
-            SetState(result.Connected ? SessionState.Connected : SessionState.Disconnected);
-
-            return result;
+            try
+            {
+                SetState(SessionState.Connecting);
+                var result = await _provider.JoinSessionAsync(request, token);
+                SetState(result.Connected ? SessionState.Connected : SessionState.Disconnected);
+                return result;
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                SetState(SessionState.Disconnected);
+                return SessionJoinResult.Fail();
+            }
         }
 
         public async Task DisconnectAsync(CancellationToken token)
         {
             if (!EnsureProvider()) return;
 
-            if (State is SessionState.Disconnected) return;
             if (State is not SessionState.Connected) return;
-            
-            SetState(SessionState.Disconnecting);
-            
-            await _provider.DisconnectAsync(token);
-            
-            SetState(SessionState.Disconnected);
+
+            try
+            {
+                SetState(SessionState.Disconnecting);
+                await _provider.DisconnectAsync(token);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+            finally
+            {
+                SetState(SessionState.Disconnected);
+            }
         }
     }
 }
